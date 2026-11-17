@@ -14,6 +14,7 @@ MVP v1.0 en desarrollo.
 
 - **Fase 1** — estructura y entorno.
 - **Fase 2** — normalización del lenguaje informal (`NLP/TextNormalizer.py`).
+- **Fase 3** — procesamiento de emojis (`NLP/EmojiProcessor.py`).
 
 ## Tecnologías
 
@@ -38,6 +39,34 @@ Brieflyx/
 ├── requirements.txt
 └── README.md
 ```
+
+## Módulos
+
+Cada módulo devuelve un resultado inmutable que conserva el texto original sin cambios.
+
+### Normalización (`NLP/TextNormalizer.py`)
+
+```python
+from NLP.TextNormalizer import TextNormalizer
+
+result = TextNormalizer().normalize("toy bn xfa, ¿xq no viniste?")
+result.normalized_text  # "estoy bien por favor, ¿por qué no viniste?"
+result.changes          # cada cambio con su categoría
+```
+
+### Emojis (`NLP/EmojiProcessor.py`)
+
+```python
+from NLP.EmojiProcessor import EmojiProcessor
+
+result = EmojiProcessor().process("qué rabia 😡😡😡 pero llegué 👍")
+result.processed_text       # "qué rabia enojo pero llegué aprobación"
+result.text_without_emojis  # "qué rabia pero llegué"
+result.category_counts      # {"enojo": 3, "aprobación": 1}
+result.occurrences[0]       # emoji, descripción, categoría, repeticiones, posición
+```
+
+Los emojis se clasifican con un mapa revisado de emojis frecuentes y, para el resto, con palabras clave sobre el nombre que da la biblioteca `emoji`. Si un emoji no expresa una emoción, se usa su descripción en español ("🚗" → "coche"). Las repeticiones seguidas cuentan como una sola ocurrencia con su cantidad. Ambos módulos son independientes y pueden aplicarse en cualquier orden.
 
 ## Instalación
 
