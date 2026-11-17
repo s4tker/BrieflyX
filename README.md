@@ -17,6 +17,7 @@ MVP v1.0 en desarrollo.
 - **Fase 3** — procesamiento de emojis (`NLP/EmojiProcessor.py`).
 - **Fase 4** — análisis lingüístico con spaCy (`NLP/TextAnalyzer.py`).
 - **Fase 5** — resumen extractivo con TextRank (`NLP/Summarizer.py`).
+- **Fase 6** — palabras clave (`NLP/KeywordExtractor.py`) e ideas principales (`NLP/KeyPoints.py`).
 
 ## Tecnologías
 
@@ -104,6 +105,31 @@ result.reduction_percentage  # porcentaje de palabras eliminadas
 5. Se eligen las mejor puntuadas, descartando las redundantes (coseno ≥ 0,8 o texto idéntico), y se devuelven en su orden original.
 
 Es extractivo: cada oración es un fragmento literal del texto, recuperado por su posición. Con una sola oración no se construye grafo; si ninguna oración comparte términos, todas puntúan igual y se prefiere la de más contenido. `summarize_analysis()` acepta un `TextAnalysis` ya calculado para no procesar el texto dos veces.
+
+### Palabras clave (`NLP/KeywordExtractor.py`)
+
+```python
+from NLP.KeywordExtractor import KeywordExtractor
+
+result = KeywordExtractor().extract(texto, top_n=8)
+result.terms                 # ["cambio climático", "temperatura", ...]
+result.keywords[0].score     # relevancia normalizada (la primera vale 1.0)
+result.keywords[0].variants  # formas en que aparece en el texto
+```
+
+Candidatos: sustantivos, nombres propios y adjetivos, más frases de dos palabras que se repiten ("cambio climático", "energía renovable"). Cada oración es un documento TF-IDF y la relevancia es la suma de pesos (frecuencia × idf), de modo que un término presente en todas las oraciones pierde peso frente a uno que distingue partes del texto. Las variantes ("economía", "económico") se agrupan con el stemmer Snowball de NLTK, y una frase sustituye a las palabras que contiene.
+
+### Ideas principales (`NLP/KeyPoints.py`)
+
+```python
+from NLP.KeyPoints import KeyPointIdentifier
+
+result = KeyPointIdentifier().identify(texto, count=3)
+result.texts                # oraciones originales, en orden
+result.points[0].keywords   # conceptos que contiene esa idea
+```
+
+Puntuación = 0,6 · TextRank + 0,4 · cobertura de palabras clave (ambas normalizadas). Reutiliza la similitud, PageRank y la selección sin redundancia de `Summarizer`, con un umbral más estricto (0,25) para que cada idea aporte un concepto distinto. Prefiere oraciones de al menos 4 palabras. `identify_from_analysis()` acepta el análisis, las palabras clave y el ranking ya calculados para no repetir trabajo.
 
 ## Instalación
 
