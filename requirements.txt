@@ -8,5 +8,8 @@ scikit-learn==1.9.1
 networkx==3.7
 emoji==2.16.0
 
+# modelo de spacy para español
+es_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl
+
 # pruebas
 pytest==9.2.0
