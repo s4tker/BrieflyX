@@ -10,7 +10,10 @@ Ayudar a estudiantes, profesionales y cualquier usuario a comprender informació
 
 ## Estado
 
-MVP v1.0 en desarrollo — **Fase 1 completada** (estructura y entorno).
+MVP v1.0 en desarrollo.
+
+- **Fase 1** — estructura y entorno.
+- **Fase 2** — normalización del lenguaje informal (`NLP/TextNormalizer.py`).
 
 ## Tecnologías
 
@@ -53,3 +56,11 @@ streamlit run app.py
 ```
 
 La aplicación queda disponible en http://localhost:8501.
+
+## Pruebas
+
+```bash
+pytest
+```
+
+Los archivos de prueba siguen la convención PascalCase (`Tests/Test*.py`); `pytest.ini` le indica a pytest cómo descubrirlos.
