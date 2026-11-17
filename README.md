@@ -16,6 +16,7 @@ MVP v1.0 en desarrollo.
 - **Fase 2** — normalización del lenguaje informal (`NLP/TextNormalizer.py`).
 - **Fase 3** — procesamiento de emojis (`NLP/EmojiProcessor.py`).
 - **Fase 4** — análisis lingüístico con spaCy (`NLP/TextAnalyzer.py`).
+- **Fase 5** — resumen extractivo con TextRank (`NLP/Summarizer.py`).
 
 ## Tecnologías
 
@@ -84,6 +85,25 @@ analysis.lemma_frequencies     # lemas con contenido y su frecuencia
 ```
 
 Usa el modelo `es_core_news_sm` de spaCy. La segmentación es por reglas (signos de cierre, `...`, saltos de línea, `¿` y `¡` como apertura) y corrige cortes falsos tras abreviaturas como `Sra.` o `p.m.`. Las palabras vacías se excluyen del contenido; las negaciones se marcan aparte para no perderlas. Un solo `TextAnalysis` está pensado para compartirse entre los algoritmos y no procesar el texto dos veces.
+
+### Resumen TextRank (`NLP/Summarizer.py`)
+
+```python
+from NLP.Summarizer import Summarizer
+
+result = Summarizer().summarize(texto, sentence_count=4)  # o ratio=0.3
+result.summary_text          # oraciones elegidas, en orden original
+result.ranking               # todas las oraciones con su puntuación PageRank
+result.reduction_percentage  # porcentaje de palabras eliminadas
+```
+
+1. `TextAnalyzer` segmenta y lematiza; las palabras vacías ya quedan fuera.
+2. Cada oración se vectoriza con TF-IDF sobre sus lemas (scikit-learn).
+3. La similitud coseno entre oraciones define las aristas de un grafo (NetworkX).
+4. PageRank (α = 0,85) puntúa la centralidad de cada oración.
+5. Se eligen las mejor puntuadas, descartando las redundantes (coseno ≥ 0,8 o texto idéntico), y se devuelven en su orden original.
+
+Es extractivo: cada oración es un fragmento literal del texto, recuperado por su posición. Con una sola oración no se construye grafo; si ninguna oración comparte términos, todas puntúan igual y se prefiere la de más contenido. `summarize_analysis()` acepta un `TextAnalysis` ya calculado para no procesar el texto dos veces.
 
 ## Instalación
 
