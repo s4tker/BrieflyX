@@ -1,0 +1,28 @@
+# entorno virtual
+.venv/
+venv/
+env/
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# pruebas y cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+
+# streamlit (secretos locales)
+.streamlit/secrets.toml
+
+# recursos descargados de nltk
+nltk_data/
+
+# editores y sistema
+.vscode/
+.idea/
+*.swp
+.DS_Store

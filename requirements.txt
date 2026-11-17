@@ -1,0 +1,12 @@
+# interfaz
+streamlit==1.67.0
+
+# procesamiento de lenguaje natural
+spacy==3.8.18
+nltk==3.10.4
+scikit-learn==1.9.1
+networkx==3.7
+emoji==2.16.0
+
+# pruebas
+pytest==9.2.0
