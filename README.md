@@ -15,6 +15,7 @@ MVP v1.0 en desarrollo.
 - **Fase 1** — estructura y entorno.
 - **Fase 2** — normalización del lenguaje informal (`NLP/TextNormalizer.py`).
 - **Fase 3** — procesamiento de emojis (`NLP/EmojiProcessor.py`).
+- **Fase 4** — análisis lingüístico con spaCy (`NLP/TextAnalyzer.py`).
 
 ## Tecnologías
 
@@ -68,6 +69,22 @@ result.occurrences[0]       # emoji, descripción, categoría, repeticiones, pos
 
 Los emojis se clasifican con un mapa revisado de emojis frecuentes y, para el resto, con palabras clave sobre el nombre que da la biblioteca `emoji`. Si un emoji no expresa una emoción, se usa su descripción en español ("🚗" → "coche"). Las repeticiones seguidas cuentan como una sola ocurrencia con su cantidad. Ambos módulos son independientes y pueden aplicarse en cualquier orden.
 
+### Análisis lingüístico (`NLP/TextAnalyzer.py`)
+
+```python
+from NLP.TextAnalyzer import TextAnalyzer
+
+analysis = TextAnalyzer().analyze("Los gatos corrían. ¿Vienes?\nno te preocupes")
+analysis.sentence_texts        # ["Los gatos corrían.", "¿Vienes?", "no te preocupes"]
+sentence = analysis.sentences[0]
+sentence.content_lemmas        # ["gato", "correr"]
+sentence.lemmatized_text       # "gato correr" (entrada para TF-IDF)
+analysis.sentences[2].has_negation  # True
+analysis.lemma_frequencies     # lemas con contenido y su frecuencia
+```
+
+Usa el modelo `es_core_news_sm` de spaCy. La segmentación es por reglas (signos de cierre, `...`, saltos de línea, `¿` y `¡` como apertura) y corrige cortes falsos tras abreviaturas como `Sra.` o `p.m.`. Las palabras vacías se excluyen del contenido; las negaciones se marcan aparte para no perderlas. Un solo `TextAnalysis` está pensado para compartirse entre los algoritmos y no procesar el texto dos veces.
+
 ## Instalación
 
 Requiere Python 3.12.
@@ -77,6 +94,8 @@ python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+`requirements.txt` incluye el modelo de spaCy para español (`es_core_news_sm`), que se descarga desde GitHub durante la instalación.
 
 ## Ejecución
 
