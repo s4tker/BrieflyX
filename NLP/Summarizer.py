@@ -123,53 +123,18 @@ class Summarizer:
             return SummaryResult(analysis.text, (), (), word_count, 0)
 
         # una sola matriz para puntuar y para filtrar redundancia
-        similarity = _similarity_matrix(sentences)
-        scores = _score(similarity)
+        similarity = sentence_similarity_matrix(sentences)
+        scores = textrank_scores(similarity)
         ranking = tuple(
             ScoredSentence(s.index, s.text, s.start, s.end, score)
             for s, score in zip(sentences, scores)
         )
         target = _target_size(len(sentences), sentence_count, ratio)
-        chosen = self._select(sentences, scores, similarity, target)
+        chosen = select_diverse_sentences(sentences, scores, similarity, target)
 
         selected = tuple(ranking[index] for index in sorted(chosen))
         summary_words = sum(len(sentences[index].words) for index in chosen)
         return SummaryResult(analysis.text, selected, ranking, word_count, summary_words)
-
-    @staticmethod
-    def _select(
-        sentences: tuple[AnalyzedSentence, ...],
-        scores: list[float],
-        similarity: np.ndarray,
-        target: int,
-    ) -> list[int]:
-        """Elige hasta ``target`` oraciones por puntuación, evitando redundancia.
-
-        Los empates se resuelven a favor de la oración con más contenido y,
-        después, de la que aparece antes.
-        """
-        order = sorted(
-            range(len(sentences)),
-            key=lambda i: (
-                -round(scores[i], SCORE_PRECISION),
-                -len(sentences[i].content_lemmas),
-                i,
-            ),
-        )
-        chosen: list[int] = []
-        seen_texts: set[str] = set()
-        for index in order:
-            if len(chosen) == target:
-                break
-            key = " ".join(sentences[index].words).casefold()
-            if key in seen_texts:
-                continue
-            if any(similarity[index][other] >= REDUNDANCY_THRESHOLD for other in chosen):
-                continue
-            chosen.append(index)
-            seen_texts.add(key)
-        # nunca vacío si hay contenido: la mejor puntuada siempre entra
-        return chosen or order[:1]
 
 
 def _validate_length(sentence_count: int | None, ratio: float | None) -> None:
@@ -195,14 +160,53 @@ def _target_size(total: int, sentence_count: int | None, ratio: float | None) ->
     return max(1, min(total, math.ceil(total * proportion)))
 
 
-def _score(similarity: np.ndarray) -> list[float]:
-    """Puntuación de cada oración; con una sola no hace falta grafo."""
+def select_diverse_sentences(
+    sentences: tuple[AnalyzedSentence, ...],
+    scores: list[float],
+    similarity: np.ndarray,
+    target: int,
+    threshold: float = REDUNDANCY_THRESHOLD,
+) -> list[int]:
+    """Elige hasta ``target`` oraciones por puntuación, evitando redundancia.
+
+    Una oración es redundante si su similitud con alguna ya elegida alcanza
+    ``threshold``. Compartida con KeyPoints, que usa un umbral más estricto.
+
+    Los empates se resuelven a favor de la oración con más contenido y,
+    después, de la que aparece antes.
+    """
+    order = sorted(
+        range(len(sentences)),
+        key=lambda i: (
+            -round(scores[i], SCORE_PRECISION),
+            -len(sentences[i].content_lemmas),
+            i,
+        ),
+    )
+    chosen: list[int] = []
+    seen_texts: set[str] = set()
+    for index in order:
+        if len(chosen) == target:
+            break
+        key = " ".join(sentences[index].words).casefold()
+        if key in seen_texts:
+            continue
+        if any(similarity[index][other] >= threshold for other in chosen):
+            continue
+        chosen.append(index)
+        seen_texts.add(key)
+    # nunca vacío si hay contenido: la mejor puntuada siempre entra
+    return chosen or order[:1]
+
+
+def textrank_scores(similarity: np.ndarray) -> list[float]:
+    """Puntuación TextRank de cada oración; con una sola no hace falta grafo."""
     if similarity.shape[0] == 1:
         return [1.0]
     return _pagerank(similarity)
 
 
-def _similarity_matrix(sentences: tuple[AnalyzedSentence, ...]) -> np.ndarray:
+def sentence_similarity_matrix(sentences: tuple[AnalyzedSentence, ...]) -> np.ndarray:
     """Matriz de similitud coseno entre oraciones (diagonal en cero).
 
     Las oraciones sin lemas de contenido tienen vector nulo y similitud 0
